@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Retail Demand Prediction</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <div>
+          <h1>Smart Retail Demand Prediction</h1>
+          <p class="subtitle">Upload your Excel file to see simple analytics and forecast demand.</p>
+        </div>
+        <nav class="nav">
+          <a class="navlink" th:href="@{/dashboard}">Dashboard</a>
+          <a class="navlink" th:href="@{/predict}">Prediction</a>
+        </nav>
+      </header>
+
+      <main class="card">
+        <h2>1) Upload your sales data</h2>
+        <p class="hint">
+          Supported: <strong>.xlsx</strong> or <strong>.xls</strong>. If you're not sure, use the sample template.
+        </p>
+
+        <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" role="alert" th:text="${success}"></div>
+
+        <form id="uploadForm" class="uploadForm" th:action="@{/upload}" method="post" enctype="multipart/form-data">
+          <label id="dropzone" class="dropzone" for="file">
+            <input id="file" name="file" type="file" accept=".xlsx,.xls" />
+            <div class="dz-title">Drag & drop your Excel file here</div>
+            <div class="dz-sub">or click to choose a file</div>
+            <div id="filename" class="dz-filename"></div>
+          </label>
+
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">Upload & Process</button>
+            <a class="btn btn-secondary" th:href="@{/sample}">Download sample Excel</a>
+          </div>
+
+          <div id="loading" class="loading" aria-live="polite" aria-busy="true" hidden>
+            <div class="spinner"></div>
+            <div>Uploading your file…</div>
+          </div>
+        </form>
+      </main>
+
+      <section class="card" th:if="${batch}">
+        <h2>2) Results</h2>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-label" title="How many rows were successfully loaded into the app.">Rows loaded</div>
+            <div class="metric-value" th:text="${batch.rowsLoaded}">0</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label" title="Rows skipped because they were duplicates or missing too much information.">Rows skipped</div>
+            <div class="metric-value" th:text="${batch.rowsSkipped}">0</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label" title="How many cells were auto-fixed using safe defaults (median/mode).">Fixes applied</div>
+            <div class="metric-value" th:text="${batch.rowsFixed}">0</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label" title="A human-friendly summary of what happened.">Summary</div>
+            <div class="metric-small" th:text="${batch.summaryMessage}">—</div>
+          </div>
+        </div>
+
+        <div th:if="${report != null && !#lists.isEmpty(report.warnings)}" class="alert alert-warn">
+          <strong>Notes:</strong>
+          <ul>
+            <li th:each="w : ${report.warnings}" th:text="${w}"></li>
+          </ul>
+        </div>
+
+        <h3>Preview (cleaned)</h3>
+        <div class="tableWrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Region</th>
+                <th class="num">Price</th>
+                <th class="num">Discount %</th>
+                <th class="num">Units</th>
+                <th class="num">Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="r : ${preview}">
+                <td th:text="${r.saleDate}"></td>
+                <td th:text="${r.category}"></td>
+                <td th:text="${r.region}"></td>
+                <td class="num" th:text="${#numbers.formatDecimal(r.price,1,2)}"></td>
+                <td class="num" th:text="${#numbers.formatDecimal(r.discountPct,1,2)}"></td>
+                <td class="num" th:text="${r.unitsSold}"></td>
+                <td class="num" th:text="${#numbers.formatDecimal(r.revenue,1,2)}"></td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(preview)}">
+                <td colspan="7" class="muted">No rows to preview.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="actions">
+          <a class="btn btn-primary" th:href="@{/dashboard}">Go to dashboard</a>
+          <a class="btn btn-secondary" th:href="@{/predict}">Try demand prediction</a>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div class="muted">
+          Tip: If you get errors, download the sample and copy-paste your data into it.
+        </div>
+        <div class="muted">
+          H2 console: <a th:href="@{/h2}">/h2</a>
+        </div>
+      </footer>
+    </div>
+
+    <script th:src="@{/js/upload.js}"></script>
+  </body>
+</html>
+

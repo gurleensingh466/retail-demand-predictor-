@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Demand Prediction - Smart Retail</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <div>
+          <h1>Demand Prediction</h1>
+          <p class="subtitle">Fill in a few details to get an easy forecast.</p>
+        </div>
+        <nav class="nav">
+          <a class="navlink" th:href="@{/}">Upload</a>
+          <a class="navlink" th:href="@{/dashboard}">Dashboard</a>
+        </nav>
+      </header>
+
+      <div th:if="${empty}" class="card">
+        <h2>No data yet</h2>
+        <p class="hint">Upload an Excel file first so the model can learn from your business data.</p>
+        <a class="btn btn-primary" th:href="@{/}">Go to upload</a>
+      </div>
+
+      <main th:if="${!empty}" class="card">
+        <h2>Prediction inputs</h2>
+        <p class="hint">
+          Tip: hover over labels to see what they mean. The model retrains automatically on every upload.
+        </p>
+
+        <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+        <form id="predictForm" class="gridForm" th:action="@{/predict}" method="post">
+          <div class="field">
+            <label title="Choose the product category you want to forecast.">Product category</label>
+            <select name="category" required>
+              <option th:each="c : ${categories}"
+                      th:value="${c}"
+                      th:text="${c}"
+                      th:selected="${form != null && form.category == c}"></option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label title="Choose the selling region for this prediction.">Region</label>
+            <select name="region" required>
+              <option th:each="r : ${regions}"
+                      th:value="${r}"
+                      th:text="${r}"
+                      th:selected="${form != null && form.region == r}"></option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label title="The price you plan to sell at.">Price</label>
+            <input name="price" type="number" step="0.01" min="0" th:value="${form != null ? form.price : 49.99}" required />
+          </div>
+
+          <div class="field">
+            <label title="Your planned discount percentage.">Discount %</label>
+            <input id="discountPct" name="discountPct" type="range" min="0" max="80" step="1" th:value="${form != null ? form.discountPct : 10}" />
+            <div class="muted" id="discountLabel"></div>
+          </div>
+
+          <div class="field">
+            <label title="Month/season affects demand.">Month / season</label>
+            <select name="month" required>
+              <option th:each="m : ${months}"
+                      th:value="${m.value}"
+                      th:text="${m.label}"
+                      th:selected="${form != null && form.month == m.value}"></option>
+            </select>
+          </div>
+
+          <div class="actions" style="align-items:end">
+            <button class="btn btn-primary" type="submit">Predict demand</button>
+            <a class="btn btn-secondary" th:href="@{/}">Upload new data</a>
+          </div>
+        </form>
+      </main>
+
+      <section th:if="${result != null}" class="card">
+        <h2>Prediction result</h2>
+
+        <div class="metrics" style="grid-template-columns:repeat(2, minmax(0, 1fr))">
+          <div class="metric">
+            <div class="metric-label" title="How many units you're expected to sell.">Predicted demand</div>
+            <div class="metric-value" th:text="${headline}">Expected to sell ~0 units</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label" title="A simple confidence estimate (not a guarantee).">Confidence</div>
+            <div class="confidenceBar">
+              <div class="confidenceFill" th:classappend="' ' + ${confidenceClass}"
+                   th:style="'width:' + ${confidencePct} + '%'"></div>
+            </div>
+            <div class="muted" style="margin-top:6px" th:text="${result.confidence}"></div>
+          </div>
+        </div>
+
+        <div class="alert alert-success" style="margin-top:12px">
+          <strong>Why this estimate?</strong>
+          <div th:text="${result.explanation}"></div>
+        </div>
+      </section>
+    </div>
+
+    <script th:src="@{/js/predict.js}"></script>
+  </body>
+</html>
+

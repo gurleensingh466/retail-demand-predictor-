@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Processing upload - Smart Retail</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <div>
+          <h1>Processing your upload</h1>
+          <p class="subtitle">You can keep this page open — it will update automatically.</p>
+        </div>
+        <nav class="nav">
+          <a class="navlink" th:href="@{/}">Upload</a>
+          <a class="navlink" th:href="@{/dashboard}">Dashboard</a>
+          <a class="navlink" th:href="@{/predict}">Prediction</a>
+        </nav>
+      </header>
+
+      <div th:if="${missing}" class="card">
+        <h2>Upload not found</h2>
+        <p class="hint">Please go back and upload again.</p>
+        <a class="btn btn-primary" th:href="@{/}">Go to upload</a>
+      </div>
+
+      <main th:if="${!missing}" class="card">
+        <h2>Status</h2>
+        <p class="hint">
+          While this runs, we’re reading your Excel file, cleaning it, saving rows to the database, and training the prediction model.
+        </p>
+
+        <div class="metrics" style="grid-template-columns:repeat(4, minmax(0, 1fr))">
+          <div class="metric">
+            <div class="metric-label">State</div>
+            <div class="metric-value" id="statusText" th:text="${batch.status}">PROCESSING</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Rows loaded</div>
+            <div class="metric-value" id="rowsLoaded" th:text="${batch.rowsLoaded}">0</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Rows skipped</div>
+            <div class="metric-value" id="rowsSkipped" th:text="${batch.rowsSkipped}">0</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Fixes applied</div>
+            <div class="metric-value" id="rowsFixed" th:text="${batch.rowsFixed}">0</div>
+          </div>
+        </div>
+
+        <div class="alert alert-warn" style="margin-top:12px">
+          <strong>Live update:</strong>
+          <div id="summaryText" th:text="${batch.summaryMessage}">Processing…</div>
+        </div>
+
+        <div class="card" style="padding:12px;margin-top:12px;background:rgba(0,0,0,.10);">
+          <div class="muted" style="margin-bottom:8px;">Timing breakdown</div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+            <div>
+              <div class="metric-label">File → server</div>
+              <div class="metric-value" id="uploadToServerMs" th:text="${batch.uploadToServerMs}">0</div>
+            </div>
+            <div>
+              <div class="metric-label">Processing</div>
+              <div class="metric-value" id="processingMs" th:text="${batch.processingMs}">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="loading" class="loading" style="margin-top:10px">
+          <div class="spinner"></div>
+          <div>Working…</div>
+        </div>
+
+        <div id="doneActions" class="actions" style="margin-top:14px" hidden>
+          <a class="btn btn-primary" th:href="@{/dashboard}">Go to dashboard</a>
+          <a class="btn btn-secondary" th:href="@{/predict}">Try demand prediction</a>
+        </div>
+
+        <div id="errorBox" class="alert alert-danger" style="margin-top:12px" hidden></div>
+      </main>
+    </div>
+
+    <script th:inline="javascript">
+      const batchId = /*[[${batch != null ? batch.id : 0}]]*/ 0;
+    </script>
+    <script th:src="@{/js/upload-status.js}"></script>
+  </body>
+</html>
+
