@@ -19,10 +19,21 @@ spring:
     console:
       enabled: true
       path: /h2
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  mvc:
+    async:
+      request-timeout: 120000
+  task:
+    execution:
+      pool:
+        core-size: 4
+        max-size: 8
 
 app:
   upload:
     maxRowsPreview: 25
   sample:
     outputPath: sample_sales_data.xlsx
-
