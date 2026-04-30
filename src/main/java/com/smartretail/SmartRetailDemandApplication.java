@@ -1,9 +1,7 @@
 package com.smartretail;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
-
 @SpringBootApplication
 @EnableAsync
 public class SmartRetailDemandApplication {
@@ -11,4 +9,3 @@ public class SmartRetailDemandApplication {
     SpringApplication.run(SmartRetailDemandApplication.class, args);
   }
 }
-
