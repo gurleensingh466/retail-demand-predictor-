@@ -17,16 +17,17 @@
         <nav class="nav">
           <a class="navlink" th:href="@{/}">Upload</a>
           <a class="navlink" th:href="@{/predict}">Prediction</a>
-        </nav>
+          <a class="navlink" th:href="@{/inventory}">Inventory</a>
+          </nav>
       </header>
 
-      <div th:if="${empty}" class="card">
+<div th:if="${empty != null and empty}" class="card">
         <h2>No data yet</h2>
         <p class="hint">Upload an Excel file first.</p>
         <a class="btn btn-primary" th:href="@{/}">Go to upload</a>
       </div>
 
-      <main th:if="${!empty}" class="card">
+      <main th:if="${empty == null or !empty}" class="card">
         <h2>Key metrics</h2>
         <div class="metrics">
           <div class="metric">
@@ -48,25 +49,25 @@
         </div>
       </main>
 
-      <section th:if="${!empty}" class="card">
+<section th:if="${empty == null or !empty}" class="card">
         <h2>Sales over time</h2>
         <canvas id="salesOverTime" height="110"></canvas>
         <p class="hint" th:text="${data.salesInsight}"></p>
       </section>
 
-      <section th:if="${!empty}" class="card">
+      <section th:if="${empty == null or !empty}" class="card">
         <h2>Top selling categories</h2>
         <canvas id="topCategories" height="110"></canvas>
         <p class="hint" th:text="${data.categoryInsight}"></p>
       </section>
 
-      <section th:if="${!empty}" class="card">
+      <section th:if="${empty == null or !empty}" class="card">
         <h2>Sales by region</h2>
         <canvas id="salesByRegion" height="110"></canvas>
         <p class="hint">This shows where your revenue is coming from geographically.</p>
       </section>
 
-      <section th:if="${!empty}" class="card">
+      <section th:if="${empty == null or !empty}" class="card">
         <h2>Discount vs sales impact</h2>
         <canvas id="discountImpact" height="120"></canvas>
         <p class="hint">If points trend upward, discounts may be helping you sell more units.</p>

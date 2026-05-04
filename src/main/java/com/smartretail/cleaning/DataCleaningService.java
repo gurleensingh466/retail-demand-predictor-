@@ -133,46 +133,74 @@ public class DataCleaningService {
   }
 
   private Map<String, Integer> readHeader(Sheet sheet, CleaningReport report) {
-    // We accept flexible header names; user-friendly.
     Map<String, String> canonical = new HashMap<>();
+    // date
     canonical.put("date", "date");
     canonical.put("sale date", "date");
     canonical.put("sales date", "date");
+    canonical.put("purchase_date", "date");
+    canonical.put("purchase date", "date");
+    canonical.put("order date", "date");
+    canonical.put("order_date", "date");
+    // category
     canonical.put("category", "category");
     canonical.put("product category", "category");
+    canonical.put("product_category", "category");
+    // region
     canonical.put("region", "region");
+    canonical.put("state", "region");
+    canonical.put("city", "region");
+    canonical.put("territory", "region");
+    canonical.put("area", "region");
+    // price
     canonical.put("price", "price");
     canonical.put("unit price", "price");
+    canonical.put("unit_price", "price");
+    canonical.put("selling price", "price");
+    canonical.put("selling_price", "price");
+    // discount
     canonical.put("discount", "discount");
     canonical.put("discount %", "discount");
     canonical.put("discount pct", "discount");
     canonical.put("discount percent", "discount");
+    canonical.put("disc%", "discount");
+    canonical.put("discount_pct", "discount");
+    // units
     canonical.put("units", "units");
     canonical.put("units sold", "units");
+    canonical.put("units_sold", "units");
     canonical.put("demand", "units");
+    canonical.put("quantity", "units");
+    canonical.put("qty", "units");
+    canonical.put("total_sales", "units");
+    canonical.put("total sales", "units");
+    canonical.put("quantity sold", "units");
+    canonical.put("quantity_sold", "units");
 
     for (int r = sheet.getFirstRowNum(); r <= Math.min(sheet.getFirstRowNum() + 20, sheet.getLastRowNum()); r++) {
       Row row = sheet.getRow(r);
       if (row == null) continue;
       Map<String, Integer> header = new HashMap<>();
       for (Cell cell : row) {
-        String raw = normalizeText(FORMATTER.formatCellValue(cell), "");
-        if (raw.isBlank()) continue;
-        String key = canonical.get(raw.toLowerCase(Locale.ROOT));
-        if (key != null && !header.containsKey(key)) header.put(key, cell.getColumnIndex());
+        // Use raw cell value in lowercase WITHOUT normalizeText to preserve underscores
+        String rawValue = FORMATTER.formatCellValue(cell);
+        if (rawValue == null || rawValue.isBlank()) continue;
+        String lookupKey = rawValue.trim().toLowerCase(Locale.ROOT);
+        String mapped = canonical.get(lookupKey);
+        if (mapped != null && !header.containsKey(mapped)) {
+          header.put(mapped, cell.getColumnIndex());
+        }
       }
       if (header.containsKey("date")
           && header.containsKey("category")
           && header.containsKey("region")
           && header.containsKey("price")
-          && header.containsKey("discount")
           && header.containsKey("units")) {
         return header;
       }
     }
 
-    report.warn(
-        "We couldn't match the required columns (date, category, region, price, discount, units).");
+    report.warn("We couldn't match the required columns (date, category, region, price, units).");
     return Map.of();
   }
 
@@ -182,10 +210,11 @@ public class DataCleaningService {
     String region = normalizeText(getString(row, header.get("region")), null);
 
     Double price = parseDouble(getCell(row, header.get("price")));
-    Double discount = parseDouble(getCell(row, header.get("discount")));
+    Double discount = header.containsKey("discount")
+        ? parseDouble(getCell(row, header.get("discount")))
+        : 0.0;
     Integer units = parseInt(getCell(row, header.get("units")));
 
-    // If truly empty row, ignore.
     if (date == null
         && category == null
         && region == null
@@ -252,7 +281,6 @@ public class DataCleaningService {
     if (s == null) return null;
     String t = s.trim().replaceAll("\\s+", " ");
     if (t.isBlank()) return fallbackIfBlank;
-    // Title-case-ish: keep acronyms.
     String lower = t.toLowerCase(Locale.ROOT);
     if (t.equals(t.toUpperCase(Locale.ROOT)) && t.length() <= 5) return t;
     return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
@@ -336,4 +364,3 @@ public class DataCleaningService {
     return best == null ? fallback : best;
   }
 }
-

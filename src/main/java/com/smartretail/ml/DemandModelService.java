@@ -145,8 +145,10 @@ public class DemandModelService {
 
   private record Dataset(Instances instances, Schema schema) {
     static Dataset fromRows(List<SalesRecord> rows) {
-      var category = new Attribute("category", (List<String>) null);
-      var region = new Attribute("region", (List<String>) null);
+      List<String> categories = rows.stream().map(r -> safeStr(r.getCategory())).distinct().sorted().toList();
+      List<String> regions = rows.stream().map(r -> safeStr(r.getRegion())).distinct().sorted().toList();
+      var category = new Attribute("category", categories);
+      var region = new Attribute("region", regions);
       var price = new Attribute("price");
       var discount = new Attribute("discountPct");
       var month = new Attribute("month");
@@ -159,8 +161,8 @@ public class DemandModelService {
 
       for (SalesRecord r : rows) {
         double[] v = new double[data.numAttributes()];
-        v[0] = data.attribute(0).addStringValue(safeStr(r.getCategory()));
-        v[1] = data.attribute(1).addStringValue(safeStr(r.getRegion()));
+        v[0] = category.indexOfValue(safeStr(r.getCategory()));
+        v[1] = region.indexOfValue(safeStr(r.getRegion()));
         v[2] = r.getPrice();
         v[3] = r.getDiscountPct();
         v[4] = YearMonth.from(r.getSaleDate()).getMonthValue();

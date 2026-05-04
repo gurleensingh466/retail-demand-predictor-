@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inventory Manager</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <div>
+      <h1>📦 Inventory Manager</h1>
+      <p class="subtitle">Enter current stock levels. The app will alert you when stock is at risk.</p>
+    </div>
+    <nav class="nav">
+      <a class="navlink" th:href="@{/}">Upload</a>
+      <a class="navlink" th:href="@{/dashboard}">Dashboard</a>
+      <a class="navlink" th:href="@{/predict}">Prediction</a>
+      <a class="navlink" th:href="@{/inventory}">Inventory</a>
+    </nav>
+  </header>
+
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+  <!-- Add Form -->
+  <main class="card">
+    <h2>Add / Update Stock</h2>
+    <p class="hint">Select category and region, then enter current stock and average price.</p>
+    <form th:action="@{/inventory/save}" method="post">
+      <div class="gridForm" style="grid-template-columns: repeat(4, minmax(0,1fr));">
+        <div class="field">
+          <label>Category</label>
+          <select name="category">
+            <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat}"></option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Region</label>
+          <select name="region">
+            <option th:each="reg : ${regions}" th:value="${reg}" th:text="${reg}"></option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Current Stock (units)</label>
+          <input type="number" name="currentStock" min="0" required placeholder="e.g. 150"/>
+        </div>
+        <div class="field">
+          <label>Avg Price (₹)</label>
+          <input type="number" name="avgPrice" min="0" step="0.01" required placeholder="e.g. 999.00"/>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:14px;">
+        <button class="btn btn-primary" type="submit">Save Stock</button>
+      </div>
+    </form>
+  </main>
+
+  <!-- Inventory Table -->
+  <section class="card">
+    <h2>Current Inventory</h2>
+    <div th:if="${items.empty}" class="muted">No inventory added yet. Add stock above after uploading your dataset.</div>
+    <div class="tableWrap" th:if="${!items.empty}">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Region</th>
+            <th class="num">Current Stock</th>
+            <th class="num">Avg Price (₹)</th>
+            <th>Status</th>
+            <th>Last Updated</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="item : ${items}">
+            <td th:text="${item.category}"></td>
+            <td th:text="${item.region}"></td>
+            <td class="num" th:text="${item.currentStock}"></td>
+            <td class="num" th:text="'₹' + ${#numbers.formatDecimal(item.avgPrice, 1, 2)}"></td>
+            <td>
+              <span th:if="${item.currentStock < 20}"  style="color:var(--bad);font-weight:700;">🔴 Critical</span>
+              <span th:if="${item.currentStock >= 20 and item.currentStock < 50}" style="color:var(--warn);font-weight:700;">🟡 Low</span>
+              <span th:if="${item.currentStock >= 50}" style="color:var(--good);font-weight:700;">🟢 Good</span>
+            </td>
+            <td th:text="${#temporals.format(item.updatedAt, 'dd MMM yyyy')}"></td>
+            <td>
+              <form th:action="@{/inventory/delete/{id}(id=${item.id})}" method="post">
+                <button type="submit" class="btn" style="padding:6px 12px;color:var(--bad);border-color:var(--bad);">Remove</button>
+              </form>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="muted">Upload your dataset first to populate category and region dropdowns.</div>
+  </footer>
+</div>
+</body>
+</html>

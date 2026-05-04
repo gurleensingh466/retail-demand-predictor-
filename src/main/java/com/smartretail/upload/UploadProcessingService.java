@@ -11,12 +11,16 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UploadProcessingService {
+  private static final Logger log = LoggerFactory.getLogger(UploadProcessingService.class);
+
   private final DataCleaningService cleaningService;
   private final UploadBatchRepository batchRepository;
   private final SalesRecordRepository recordRepository;
@@ -37,7 +41,10 @@ public class UploadProcessingService {
   @Transactional
   public void process(long batchId, Path tempFile) {
     UploadBatch batch = batchRepository.findById(batchId).orElse(null);
-    if (batch == null) return;
+    if (batch == null) {
+      log.error("Batch {} not found!", batchId);
+      return;
+    }
 
     long processingStart = System.currentTimeMillis();
     batch.setStatus(UploadBatch.Status.PROCESSING.name());
@@ -45,12 +52,20 @@ public class UploadProcessingService {
     batchRepository.save(batch);
 
     try (InputStream in = Files.newInputStream(tempFile)) {
+      log.info("Starting to clean and parse Excel for batchId={}", batchId);
       DataCleaningService.CleaningResult cleaned = cleaningService.cleanAndParseExcel(in, batch);
       List<SalesRecord> records = cleaned.cleanedRecords();
       CleaningReport report = cleaned.report();
 
+      log.info("Cleaning done: totalRows={} loaded={} skipped={} fixed={} warnings={} errors={}",
+          report.getTotalRows(), report.getLoadedRows(), report.getSkippedRows(),
+          report.getFixedCells(), report.getWarnings(), report.getErrors());
+
       if (!records.isEmpty()) {
         recordRepository.saveAll(records);
+        log.info("Saved {} records to database", records.size());
+      } else {
+        log.warn("No records to save! Check warnings/errors above.");
       }
 
       batch.setRowsTotal(report.getTotalRows());
@@ -59,25 +74,29 @@ public class UploadProcessingService {
       batch.setRowsFixed(report.getFixedCells());
       batch.setSummaryMessage(report.summaryPlainEnglish());
       batch.setStatus(UploadBatch.Status.DONE.name());
-      batch.setProcessingMs((int) Math.min(Integer.MAX_VALUE, System.currentTimeMillis() - processingStart));
+      batch.setProcessingMs((int) Math.min(Integer.MAX_VALUE,
+          System.currentTimeMillis() - processingStart));
       batchRepository.save(batch);
 
       try {
-        modelService.retrainLatest();
-      } catch (Exception ignored) {
+        var result = modelService.retrainLatest();
+        log.info("Model retrain result: {}", result.message());
+      } catch (Exception e) {
+        log.error("Model retrain failed: {}", e.getMessage(), e);
       }
+
     } catch (Exception e) {
+      log.error("Processing failed for batchId={}: {}", batchId, e.getMessage(), e);
       batch.setStatus(UploadBatch.Status.FAILED.name());
       batch.setErrorMessage(e.getMessage());
-      batch.setSummaryMessage("We couldn’t process that file. Please try the sample template.");
-      batch.setProcessingMs((int) Math.min(Integer.MAX_VALUE, System.currentTimeMillis() - processingStart));
+      batch.setSummaryMessage("We couldn't process that file. Error: " + e.getMessage());
+      batch.setProcessingMs((int) Math.min(Integer.MAX_VALUE,
+          System.currentTimeMillis() - processingStart));
       batchRepository.save(batch);
     } finally {
       try {
         Files.deleteIfExists(tempFile);
-      } catch (Exception ignored) {
-      }
+      } catch (Exception ignored) {}
     }
   }
 }
-

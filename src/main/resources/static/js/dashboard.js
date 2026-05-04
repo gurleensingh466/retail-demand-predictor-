@@ -1,5 +1,5 @@
 (() => {
-  if (!window.chartModel || !chartModel.months) return;
+  if (!chartModel || !chartModel.months) return;
 
   const months = Array.from(chartModel.months);
   const monthRevenue = Array.from(chartModel.monthRevenue);

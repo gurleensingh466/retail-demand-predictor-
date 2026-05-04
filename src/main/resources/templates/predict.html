@@ -16,16 +16,16 @@
         <nav class="nav">
           <a class="navlink" th:href="@{/}">Upload</a>
           <a class="navlink" th:href="@{/dashboard}">Dashboard</a>
-        </nav>
+          <a class="navlink" th:href="@{/inventory}">Inventory</a>        </nav>
       </header>
 
-      <div th:if="${empty}" class="card">
+<div th:if="${empty != null and empty}" class="card">
         <h2>No data yet</h2>
         <p class="hint">Upload an Excel file first so the model can learn from your business data.</p>
         <a class="btn btn-primary" th:href="@{/}">Go to upload</a>
       </div>
 
-      <main th:if="${!empty}" class="card">
+      <main th:if="${empty == null or !empty}" class="card">
         <h2>Prediction inputs</h2>
         <p class="hint">
           Tip: hover over labels to see what they mean. The model retrains automatically on every upload.

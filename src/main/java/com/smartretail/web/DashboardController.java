@@ -2,6 +2,7 @@ package com.smartretail.web;
 
 import com.smartretail.analytics.AnalyticsService;
 import com.smartretail.data.UploadBatch;
+import java.util.ArrayList;
 import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -32,13 +33,12 @@ public class DashboardController {
 
   private Map<String, Object> dashboardChartModel(AnalyticsService.DashboardData d) {
     return Map.of(
-        "months", d.revenueByMonth().keySet(),
-        "monthRevenue", d.revenueByMonth().values(),
-        "categories", d.revenueByCategory().keySet(),
-        "categoryRevenue", d.revenueByCategory().values(),
-        "regions", d.revenueByRegion().keySet(),
-        "regionRevenue", d.revenueByRegion().values(),
+        "months", new ArrayList<>(d.revenueByMonth().keySet()),
+        "monthRevenue", new ArrayList<>(d.revenueByMonth().values()),
+        "categories", new ArrayList<>(d.revenueByCategory().keySet()),
+        "categoryRevenue", new ArrayList<>(d.revenueByCategory().values()),
+        "regions", new ArrayList<>(d.revenueByRegion().keySet()),
+        "regionRevenue", new ArrayList<>(d.revenueByRegion().values()),
         "discountScatter", d.discountVsUnits());
   }
 }
-

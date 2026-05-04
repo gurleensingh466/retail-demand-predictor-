@@ -20,5 +20,11 @@ public interface SalesRecordRepository extends JpaRepository<SalesRecord, Long> 
 
   @Query("select distinct r.region from SalesRecord r where r.batch.id = :batchId order by r.region asc")
   List<String> listRegions(@Param("batchId") long batchId);
+
+  @Query("select distinct r.category from SalesRecord r order by r.category asc")
+List<String> findDistinctCategories();
+
+@Query("select distinct r.region from SalesRecord r order by r.region asc")
+List<String> findDistinctRegions();
 }
 

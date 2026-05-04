@@ -17,16 +17,15 @@
           <a class="navlink" th:href="@{/}">Upload</a>
           <a class="navlink" th:href="@{/dashboard}">Dashboard</a>
           <a class="navlink" th:href="@{/predict}">Prediction</a>
-        </nav>
+          <a class="navlink" th:href="@{/inventory}">Inventory</a>`n        </nav>
       </header>
-
-      <div th:if="${missing}" class="card">
+     <div th:if="${missing != null and missing}" class="card">
         <h2>Upload not found</h2>
         <p class="hint">Please go back and upload again.</p>
         <a class="btn btn-primary" th:href="@{/}">Go to upload</a>
       </div>
 
-      <main th:if="${!missing}" class="card">
+     <main th:if="${missing == null or !missing}" class="card">
         <h2>Status</h2>
         <p class="hint">
           While this runs, we’re reading your Excel file, cleaning it, saving rows to the database, and training the prediction model.
